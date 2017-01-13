@@ -3,6 +3,9 @@ package com.musicboxsystem.server.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 /**
  * Created by Sibrand on 2017-01-04.
  */
@@ -11,10 +14,17 @@ public class Bands {
 
     @Id
     public String id;
+
+    @NotNull(message = "Can't be empty")
+    @Size(max = 70, message = "Max 70")
     public String name;
+
     public String about;
+    @NotNull(message = "Can't be empty")
     public String established;
+    @NotNull(message = "Can't be empty")
     public String leader;
+    @NotNull(message = "Can't be empty")
     public String status;
 
     public Bands(){}

@@ -3,6 +3,8 @@ package com.musicboxsystem.server.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by Sibrand on 2017-01-05.
  */
@@ -11,9 +13,13 @@ public class Albums {
 
     @Id
     public String id;
+    @NotNull(message = "Can't be empty")
     public String title;
+
     public String about;
+    @NotNull(message = "Can't be empty")
     public String releaseDate;
+    @NotNull(message = "Can't be empty")
     public String BandsId;
 
     public Albums(){}
