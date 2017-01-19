@@ -31,11 +31,16 @@ public class AppRESTController {
         this.bandsService = bandsService;
     }
 
-    @CrossOrigin(origins = "http://localhost:9000")
+//    @CrossOrigin(origins = "http://localhost:443")
     @RequestMapping(method = RequestMethod.GET, value = "/getBands")
     public @ResponseBody
     List<Bands> findAll(){
         return bandsService.getObj();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getBandsById/{id}")
+    public @ResponseBody Bands findById(@PathVariable String id){
+        return bandsService.findById(id);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getAlbums")

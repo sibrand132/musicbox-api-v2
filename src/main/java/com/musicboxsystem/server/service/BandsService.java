@@ -50,7 +50,8 @@ public class BandsService  implements ServiceInterface<Bands>{
 
     @Override
     public Bands findById(String id) {
-        return null;
+        Bands bands = bandsRepository.findOne(id);
+        return bands;
     }
 
     @Override
