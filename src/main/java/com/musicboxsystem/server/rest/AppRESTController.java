@@ -43,6 +43,16 @@ public class AppRESTController {
         return bandsService.findById(id);
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/getAlbumsByBandsId/{id}")
+    public @ResponseBody List<Albums> findByBandsId(@PathVariable String id){
+        return albumsService.findByBandsId(id);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getAlbumsById/{id}")
+    public @ResponseBody Albums findAlbumsById(@PathVariable String id){
+        return albumsService.findById(id);
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/getAlbums")
     public @ResponseBody
     List<Albums> findAllAlbums(){
@@ -63,9 +73,22 @@ public class AppRESTController {
 //        return bandsService.create(bandsEntity);
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/saveAlbums")
+//    @RequestMapping(method = RequestMethod.POST, value = "/saveAlbums")
+//    public @ResponseBody
+//    Map<String, Object> create(@Valid @RequestBody Albums albumsEntity, BindingResult bindingResult){
+//
+//        if (checkError("bands", bindingResult))
+//        {
+//            albumsService.create(albumsEntity);
+//            response.put("message", "Success");
+//        }
+//        return response;
+//
+//    }
+@CrossOrigin(value = "*")
+    @RequestMapping(method = RequestMethod.POST, value = "/getAlbumsByBandsId/{id}")
     public @ResponseBody
-    Map<String, Object> create(@Valid @RequestBody Albums albumsEntity, BindingResult bindingResult){
+    Map<String, Object> create(@Valid @RequestBody Albums albumsEntity, BindingResult bindingResult, @PathVariable String id){
 
         if (checkError("bands", bindingResult))
         {
@@ -75,6 +98,7 @@ public class AppRESTController {
         return response;
 
     }
+
     //Split to seperate controllers
 
 

@@ -49,7 +49,9 @@ public class AlbumsService implements ServiceInterface <Albums>, CustomInterface
 
     @Override
     public Albums findById(String id) {
-        return null;
+
+        Albums albums = albumsRepository.findOne(id);
+        return albums;
     }
 
     @Override

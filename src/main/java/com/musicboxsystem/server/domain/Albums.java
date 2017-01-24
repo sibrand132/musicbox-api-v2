@@ -20,14 +20,14 @@ public class Albums {
     @NotNull(message = "Can't be empty")
     public String releaseDate;
     @NotNull(message = "Can't be empty")
-    public String BandsId;
+    public String bandsId;
 
     public Albums(){}
     public Albums(String title, String about, String releaseDate, String bandsId) {
         this.title = title;
         this.about = about;
         this.releaseDate = releaseDate;
-        BandsId = bandsId;
+        this.bandsId = bandsId;
     }
 
     public String getId() {
@@ -63,10 +63,10 @@ public class Albums {
     }
 
     public String getBandsId() {
-        return BandsId;
+        return bandsId;
     }
 
     public void setBandsId(String bandsId) {
-        BandsId = bandsId;
+        this.bandsId = bandsId;
     }
 }

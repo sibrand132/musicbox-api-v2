@@ -32,12 +32,7 @@ public class MusicboxSystemApplication implements CommandLineRunner{
 	@Override
 	public void run(String... args) throws Exception {
 
-//		Bands obj = new Bands("AC/DC", "desc","08.01.2017", "leader1", "active");
-//		bandsService.create(obj);
-//
-//		Albums albumObj = new Albums("TNT","albumdesc","08.01.2017", "651364");
-//		albumsService.create(albumObj);
-
+		
 
 
 	}
