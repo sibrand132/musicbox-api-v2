@@ -17,17 +17,15 @@ public class Albums {
     public String title;
 
     public String about;
-    @NotNull(message = "Can't be empty")
+
     public String releaseDate;
-    @NotNull(message = "Can't be empty")
+
     public String bandsId;
 
     public Albums(){}
     public Albums(String title, String about, String releaseDate, String bandsId) {
         this.title = title;
         this.about = about;
-        this.releaseDate = releaseDate;
-        this.bandsId = bandsId;
     }
 
     public String getId() {

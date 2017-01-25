@@ -30,9 +30,6 @@ public class DataBaseConfiguration extends AbstractMongoConfiguration{
     @Value("${spring.data.mongodb.database}")
     private String database;
 
-
-
-
     @Override
     protected String getDatabaseName() {
         return database;

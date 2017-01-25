@@ -2,8 +2,10 @@ package com.musicboxsystem.server.rest;
 
 import com.musicboxsystem.server.domain.Albums;
 import com.musicboxsystem.server.domain.Bands;
+import com.musicboxsystem.server.domain.Users;
 import com.musicboxsystem.server.service.AlbumsService;
 import com.musicboxsystem.server.service.BandsService;
+import com.musicboxsystem.server.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -23,15 +25,17 @@ public class AppRESTController {
 
     private final AlbumsService albumsService;
     private final BandsService bandsService;
+    private final UsersService usersService;
     private final Map<String,Object> response = new LinkedHashMap<>();
 
     @Autowired
-    public AppRESTController(AlbumsService albumsService, BandsService bandsService) {
+    public AppRESTController(AlbumsService albumsService, BandsService bandsService, UsersService usersService) {
         this.albumsService = albumsService;
         this.bandsService = bandsService;
+        this.usersService = usersService;
     }
 
-//    @CrossOrigin(origins = "http://localhost:443")
+
     @RequestMapping(method = RequestMethod.GET, value = "/getBands")
     public @ResponseBody
     List<Bands> findAll(){
@@ -70,22 +74,21 @@ public class AppRESTController {
         }
 
         return response;
-//        return bandsService.create(bandsEntity);
     }
 
-//    @RequestMapping(method = RequestMethod.POST, value = "/saveAlbums")
-//    public @ResponseBody
-//    Map<String, Object> create(@Valid @RequestBody Albums albumsEntity, BindingResult bindingResult){
-//
-//        if (checkError("bands", bindingResult))
-//        {
-//            albumsService.create(albumsEntity);
-//            response.put("message", "Success");
-//        }
-//        return response;
-//
-//    }
-@CrossOrigin(value = "*")
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteBands/{id}")
+    public @ResponseBody void deleteBands( @PathVariable String id){
+        bandsService.delete(id);
+        albumsService.deleteAll(id);
+
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteAlbums/{id}")
+    public @ResponseBody void deleteAlbums( @PathVariable String id){
+        albumsService.delete(id);
+    }
+
+
     @RequestMapping(method = RequestMethod.POST, value = "/getAlbumsByBandsId/{id}")
     public @ResponseBody
     Map<String, Object> create(@Valid @RequestBody Albums albumsEntity, BindingResult bindingResult, @PathVariable String id){
@@ -99,7 +102,71 @@ public class AppRESTController {
 
     }
 
-    //Split to seperate controllers
+    @RequestMapping(method = RequestMethod.PUT, value = "/updateBands/{id}")
+    public @ResponseBody Map<String,Object> update(@Valid @RequestBody Bands bandsEntity, BindingResult bindingResult, @PathVariable String id){
+
+        if (checkError("bands", bindingResult))
+        {
+            bandsService.update(bandsEntity, id);
+            response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/updateAlbums/{id}")
+    public @ResponseBody Map<String,Object> updateAlbum(@Valid @RequestBody Albums albumsEntity, BindingResult bindingResult, @PathVariable String id){
+
+        if (checkError("albums", bindingResult))
+        {
+            albumsService.update(albumsEntity, id);
+            response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getUsers")
+    public @ResponseBody
+    List<Users> findAllUsers(){
+        return usersService.getObj();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getUsersById/{id}")
+    public @ResponseBody Users findUsersById(@PathVariable String id){
+        return usersService.findById(id);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/saveUsers")
+    public @ResponseBody Map<String,Object> createUsers(@Valid @RequestBody Users usersEntity, BindingResult bindingResult){
+
+        if (checkError("bands", bindingResult))
+        {
+            usersService.create(usersEntity);
+            response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteUsers/{id}")
+    public @ResponseBody void deleteUsers( @PathVariable String id){
+        usersService.delete(id);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/updateUsers/{id}")
+    public @ResponseBody Map<String,Object> updateUsers(@Valid @RequestBody Users usersEntity, BindingResult bindingResult, @PathVariable String id){
+
+        if (checkError("albums", bindingResult))
+        {
+            usersService.update(usersEntity, id);
+            response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+
 
 
 

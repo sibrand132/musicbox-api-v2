@@ -10,7 +10,7 @@ public interface ServiceInterface<T> {
     List<T> getObj();
     T create(T obj);
     T findById(String id);
-    T update(T obj);
-
+    T update(T obj, String id);
+    void delete(String obj);
 
 }

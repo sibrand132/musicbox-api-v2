@@ -55,7 +55,18 @@ public class BandsService  implements ServiceInterface<Bands>{
     }
 
     @Override
-    public Bands update(Bands obj) {
-        return null;
+    public Bands update(Bands obj, String id) {
+        Bands bands = bandsRepository.findOne(id);
+        bands.setStatus(obj.getStatus());
+        bands.setAbout(obj.getAbout());
+        bands.setName(obj.getName());
+        bands.setLeader(obj.getLeader());
+
+        return bandsRepository.save(bands);
+    }
+
+    @Override
+    public void delete(String obj) {
+        bandsRepository.delete(obj);
     }
 }

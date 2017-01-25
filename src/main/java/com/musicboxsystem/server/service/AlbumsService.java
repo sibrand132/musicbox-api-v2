@@ -55,8 +55,26 @@ public class AlbumsService implements ServiceInterface <Albums>, CustomInterface
     }
 
     @Override
-    public Albums update(Albums obj) {
-        return null;
+    public Albums update(Albums obj, String id) {
+        Albums albums = albumsRepository.findOne(id);
+        albums.setTitle(obj.getTitle());
+        albums.setAbout(obj.getAbout());
+        albums.setBandsId(obj.getBandsId());
+        albums.setReleaseDate(obj.getReleaseDate());
+
+        return albumsRepository.save(albums);
+    }
+
+    @Override
+    public void delete(String obj) {
+        albumsRepository.delete(obj);
+    }
+
+    public void deleteAll(String id){
+        List<Albums> albumsList = albumsRepository.findByBandsId(id);
+        for(Albums album : albumsList){
+            albumsRepository.delete(album);
+        }
     }
 
     @Override
