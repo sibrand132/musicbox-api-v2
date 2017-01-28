@@ -39,4 +39,6 @@ public class DataBaseConfiguration extends AbstractMongoConfiguration{
     public Mongo mongo() throws Exception {
         return new MongoClient(host + ":"+ port);
     }
+
+
 }

@@ -2,10 +2,9 @@ package com.musicboxsystem.server;
 
 import com.musicboxsystem.server.domain.Albums;
 import com.musicboxsystem.server.domain.Bands;
+import com.musicboxsystem.server.domain.Members;
 import com.musicboxsystem.server.domain.Users;
-import com.musicboxsystem.server.service.AlbumsService;
-import com.musicboxsystem.server.service.BandsService;
-import com.musicboxsystem.server.service.UsersService;
+import com.musicboxsystem.server.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -30,17 +29,16 @@ public class MusicboxSystemApplication implements CommandLineRunner{
 	@Autowired
 	public UsersService usersService;
 
+	@Autowired
+	public MembersService membersService;
+
+
 	public static void main(String[] args) {
 		SpringApplication.run(MusicboxSystemApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-
-		Users users = new Users("user","user@user.pl","user","pass");
-		usersService.create(users);
-
-
 
 	}
 }

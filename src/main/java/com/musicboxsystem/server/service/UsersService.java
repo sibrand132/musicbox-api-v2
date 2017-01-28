@@ -1,6 +1,5 @@
 package com.musicboxsystem.server.service;
 
-import com.musicboxsystem.server.domain.Albums;
 import com.musicboxsystem.server.domain.Users;
 import com.musicboxsystem.server.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,7 @@ public class UsersService  implements ServiceInterface <Users> {
         List<Users> usersList = usersRepository.findAll();
         return convertToDTOs(usersList);
     }
+
 
     private List<Users> convertToDTOs(List<Users> models){
         return models.stream().map(this::convertToDTO).collect(toList());
