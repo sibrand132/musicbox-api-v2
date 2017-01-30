@@ -1,9 +1,6 @@
 package com.musicboxsystem.server;
 
-import com.musicboxsystem.server.domain.Albums;
-import com.musicboxsystem.server.domain.Bands;
-import com.musicboxsystem.server.domain.Members;
-import com.musicboxsystem.server.domain.Users;
+import com.musicboxsystem.server.domain.*;
 import com.musicboxsystem.server.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +9,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+
 
 @EnableAutoConfiguration
 //@SpringBootApplication
@@ -32,6 +30,8 @@ public class MusicboxSystemApplication implements CommandLineRunner{
 	@Autowired
 	public MembersService membersService;
 
+	@Autowired
+	public TracksService tracksService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(MusicboxSystemApplication.class, args);
@@ -39,6 +39,7 @@ public class MusicboxSystemApplication implements CommandLineRunner{
 
 	@Override
 	public void run(String... args) throws Exception {
+
 
 	}
 }

@@ -26,19 +26,19 @@ public class AppRESTController {
     private final BandsService bandsService;
     private final UsersService usersService;
     private final MembersService membersService;
+    private final TracksService tracksService;
     private final Map<String,Object> response = new LinkedHashMap<>();
 
 
-    public AppRESTController(AlbumsService albumsService, BandsService bandsService, UsersService usersService, MembersService membersService) {
+    public AppRESTController(AlbumsService albumsService, BandsService bandsService, UsersService usersService, MembersService membersService, TracksService tracksService) {
         this.albumsService = albumsService;
         this.bandsService = bandsService;
         this.usersService = usersService;
         this.membersService = membersService;
+        this.tracksService = tracksService;
     }
 
     @Autowired
-
-
 
     @RequestMapping(method = RequestMethod.GET, value = "/getBands")
     public @ResponseBody
@@ -218,44 +218,118 @@ public class AppRESTController {
         return response;
     }
 
-    @RequestMapping(value = "/upload",headers="content-type=multipart/*")
-    public void uploadFile(
-            @RequestParam("file") MultipartFile uploadedFileRef) {
-        // Get name of uploaded file.
-        String fileName = uploadedFileRef.getOriginalFilename();
 
-        // Path where the uploaded file will be stored.
-        String path = "uploads/" + fileName;
 
-        // This buffer will store the data read from 'uploadedFileRef'
-        byte[] buffer = new byte[1000];
+    @RequestMapping(method = RequestMethod.GET, value = "/getTracks")
+    public @ResponseBody
+    List<Tracks> findAllTracks(){
+        return tracksService.getObj();
+    }
 
-        // Now create the output file on the server.
-        File outputFile = new File(path);
+    @RequestMapping(method = RequestMethod.GET, value = "/getTracksById/{id}")
+    public @ResponseBody Tracks findTracksById(@PathVariable String id){
+        return tracksService.findById(id);
+    }
 
-        FileInputStream reader = null;
-        FileOutputStream writer = null;
-        int totalBytes = 0;
-        try {
-            outputFile.createNewFile();
+    @RequestMapping(method = RequestMethod.GET, value = "/getTracksByBandsId/{id}")
+    public @ResponseBody List<Tracks> findTracksByBandsId(@PathVariable String id){
+        return tracksService.findByBandsId(id);
+    }
 
-            reader = (FileInputStream) uploadedFileRef.getInputStream();
-            writer = new FileOutputStream(outputFile);
+    @RequestMapping(method = RequestMethod.POST, value = "/saveTracks")
+    public @ResponseBody Map<String,Object> createTracks(@Valid @RequestBody Tracks tracksEntity, BindingResult bindingResult){
 
-            int bytesRead = 0;
-            while ((bytesRead = reader.read(buffer)) != -1) {
-                writer.write(buffer);
-                totalBytes += bytesRead;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally{
+        if (checkError("bands", bindingResult))
+        {
+            tracksService.create(tracksEntity);
+            response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteTracks/{id}")
+    public @ResponseBody void deleteTracks( @PathVariable String id){
+        tracksService.delete(id);
+    }
+
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/updateTracks/{id}")
+    public @ResponseBody Map<String,Object> updateTracks(@Valid @RequestBody Tracks tracksEntity, BindingResult bindingResult, @PathVariable String id){
+
+        if (checkError("members", bindingResult))
+        {
+            tracksService.update(tracksEntity, id);
+            response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+
+
+    //////////////////////////////////    FILE UPLOAD //////////////////////////////////////////////////////////////////
+
+    @RequestMapping(value="/uploadBandsLogo/{bandsId}", method=RequestMethod.POST)
+    public @ResponseBody String uploadBandsLogo(@RequestParam("file") MultipartFile file, @PathVariable String bandsId){
+        String name = file.getOriginalFilename();
+        if (!file.isEmpty()) {
             try {
-                reader.close();
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                File dir = new File("uploads/bandsLogo/"+bandsId);
+                dir.mkdir();
+                byte[] bytes = file.getBytes();
+                BufferedOutputStream stream =
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/bandsLogo/"+ bandsId + "/" + name )));
+                stream.write(bytes);
+                stream.close();
+                return "You successfully uploaded " + name + " into " + name + "-uploaded !";
+            } catch (Exception e) {
+                return "You failed to upload " + name + " => " + e.getMessage();
             }
+        } else {
+            return "You failed to upload " + name + " because the file was empty.";
+        }
+    }
+
+    @RequestMapping(value="/uploadAlbumsLogo/{albumsId}", method=RequestMethod.POST)
+    public @ResponseBody String uploadAlbumsLogo(@RequestParam("file") MultipartFile file, @PathVariable String albumsId){
+        String name = file.getOriginalFilename();
+        if (!file.isEmpty()) {
+            try {
+                File dir = new File("uploads/albumsLogo/"+albumsId);
+                dir.mkdir();
+                byte[] bytes = file.getBytes();
+                BufferedOutputStream stream =
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/albumsLogo/"+ albumsId + "/" + name )));
+                stream.write(bytes);
+                stream.close();
+                return "You successfully uploaded " + name + " into " + name + "-uploaded !";
+            } catch (Exception e) {
+                return "You failed to upload " + name + " => " + e.getMessage();
+            }
+        } else {
+            return "You failed to upload " + name + " because the file was empty.";
+        }
+    }
+
+    @RequestMapping(value="/uploadTracks/{bandId}", method=RequestMethod.POST)
+    public @ResponseBody String uploadTracks(@RequestParam("file") MultipartFile file, @PathVariable String bandId){
+        String name = file.getOriginalFilename();
+        if (!file.isEmpty()) {
+            try {
+                File dir = new File("uploads/tracks/"+bandId);
+                dir.mkdir();
+                byte[] bytes = file.getBytes();
+                BufferedOutputStream stream =
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/tracks/"+ bandId + "/" + name )));
+                stream.write(bytes);
+                stream.close();
+                return "You successfully uploaded " + name + " into " + name + "-uploaded !";
+            } catch (Exception e) {
+                return "You failed to upload " + name + " => " + e.getMessage();
+            }
+        } else {
+            return "You failed to upload " + name + " because the file was empty.";
         }
     }
 
