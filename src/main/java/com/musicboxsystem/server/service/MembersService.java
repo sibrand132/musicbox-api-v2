@@ -68,9 +68,21 @@ public class MembersService implements ServiceInterface <Members>, CustomInterfa
         membersRepository.delete(obj);
     }
 
+    public void deleteAll(String id){
+        List<Members> membersList = membersRepository.findByUsersId(id);
+        for(Members member : membersList){
+            membersRepository.delete(member);
+        }
+    }
+
     @Override
     public List<Members> findByBandsId(String id) {
         List<Members> membersList = membersRepository.findByBandsId(id);
+        return  convertToDTOs(membersList);
+    }
+
+    public List<Members> findByUsersId(String id) {
+        List<Members> membersList = membersRepository.findByUsersId(id);
         return  convertToDTOs(membersList);
     }
 }

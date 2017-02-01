@@ -8,7 +8,7 @@ import java.util.List;
 public interface ServiceInterface<T> {
 
     List<T> getObj();
-    T create(T obj);
+    T create(T obj) throws Exception;
     T findById(String id);
     T update(T obj, String id);
     void delete(String obj);

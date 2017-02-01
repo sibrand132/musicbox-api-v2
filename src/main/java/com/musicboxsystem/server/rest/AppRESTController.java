@@ -2,14 +2,27 @@ package com.musicboxsystem.server.rest;
 
 import com.musicboxsystem.server.domain.*;
 import com.musicboxsystem.server.service.*;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+
+import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.crypto.MacProvider;
+import java.security.Key;
+
 import javax.servlet.annotation.MultipartConfig;
 import javax.validation.Valid;
+import javax.validation.constraints.Null;
 
 import java.io.*;
 import java.util.*;
@@ -30,6 +43,7 @@ public class AppRESTController {
     private final Map<String,Object> response = new LinkedHashMap<>();
 
 
+
     public AppRESTController(AlbumsService albumsService, BandsService bandsService, UsersService usersService, MembersService membersService, TracksService tracksService) {
         this.albumsService = albumsService;
         this.bandsService = bandsService;
@@ -39,7 +53,18 @@ public class AppRESTController {
     }
 
     @Autowired
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new Md5PasswordEncoder();
+    }
 
+    private String salt = "3ebed6b2ea9ed4b3";
+
+    public String getSalt() {
+        return salt;
+    }
+
+    @Autowired
     @RequestMapping(method = RequestMethod.GET, value = "/getBands")
     public @ResponseBody
     List<Bands> findAll(){
@@ -71,14 +96,39 @@ public class AppRESTController {
     @RequestMapping(method = RequestMethod.POST, value = "/saveBands")
     public @ResponseBody Map<String,Object> create(@Valid @RequestBody Bands bandsEntity, BindingResult bindingResult){
 
-        if (checkError("bands", bindingResult))
+
+        response.clear();
+
+
+        if(bandsService.bandExist(bandsEntity))
         {
+            ObjectError errorEmail = new ObjectError("name","Band already exist");
+            bindingResult.addError(errorEmail);
+            response.put("name", "Band already exist");
+        }
+        if(bindingResult.hasErrors())
+        {
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            response.put("message", "Error");
+
+            for(FieldError error: errors)
+            {
+                response.put(error.getField(),error.getDefaultMessage());
+            }
+        }
+        else
+        {
+
             bandsService.create(bandsEntity);
+
             response.put("message", "Success");
         }
 
         return response;
     }
+
+
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteBands/{id}")
     public @ResponseBody void deleteBands( @PathVariable String id){
@@ -143,19 +193,99 @@ public class AppRESTController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/saveUsers")
     public @ResponseBody Map<String,Object> createUsers(@Valid @RequestBody Users usersEntity, BindingResult bindingResult){
+        response.clear();
+        String password = usersEntity.getPass();
+        String hashedPass = passwordEncoder().encodePassword(password, this.getSalt());
+        System.out.println(this.getSalt());
 
-        if (checkError("bands", bindingResult))
+        if(!usersService.passConfirmation(usersEntity.getPass(),usersEntity.getPassconf()))
         {
-            usersService.create(usersEntity);
-            response.put("message", "Success");
+            ObjectError errorPass = new ObjectError("pass","Invalid password");
+            bindingResult.addError(errorPass);
+
+            ObjectError errorPassconf = new ObjectError("passconf","Invalid password ");
+            bindingResult.addError(errorPassconf);
+
+
+            response.put("passconf", "Invalid password confirmation");
+            response.put("pass", "Invalid password");
         }
 
+        if(usersService.userExist(usersEntity))
+        {
+            ObjectError errorEmail = new ObjectError("email","User already exist");
+            bindingResult.addError(errorEmail);
+            response.put("email", "User already exist");
+        }
+        if(bindingResult.hasErrors())
+        {
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            response.put("message", "Error");
+
+            for(FieldError error: errors)
+            {
+                response.put(error.getField(),error.getDefaultMessage());
+            }
+        }
+        else
+        {
+                usersEntity.setRole("user");
+                usersEntity.setPass(hashedPass);
+                usersService.create(usersEntity);
+
+                response.put("message", "Success");
+        }
+
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/login")
+    public @ResponseBody Map<String,Object> login(@Valid @RequestBody Login loginEntity, BindingResult bindingResult){
+        response.clear();
+        String password = loginEntity.getPass();
+        String hashedPass = passwordEncoder().encodePassword(password, this.getSalt());
+
+
+
+        Users usersEntity = usersService.findByEmail(loginEntity.getEmail());
+        Claims customClaims = Jwts.claims();
+        customClaims.put("email", usersEntity.getEmail());
+        customClaims.put("role", usersEntity.getRole());
+        customClaims.put("name", usersEntity.getName());
+        customClaims.put("id", usersEntity.getId());
+
+        if(!usersService.bandIdIfLeader(loginEntity.getEmail()).equals("")){
+            customClaims.put("bandIdLeader", usersService.bandIdIfLeader(loginEntity.getEmail()));
+        }
+
+
+        String compactJws = Jwts.builder()
+                .setClaims(customClaims)
+                .signWith(SignatureAlgorithm.HS512, this.getSalt())
+                .compact();
+
+
+
+
+        if(!usersService.userExist(usersEntity) || !usersEntity.getPass().equals(hashedPass) )
+        {
+            response.put("message", "Error");
+            response.put("email", "Invalid email and/or password");
+            response.put("pass", "Invalid email and/or password");
+        }
+        else {
+
+            response.put("message", "Success");
+            response.put("token", compactJws);
+        }
         return response;
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteUsers/{id}")
     public @ResponseBody void deleteUsers( @PathVariable String id){
         usersService.delete(id);
+        membersService.deleteAll(id);
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = "/updateUsers/{id}")

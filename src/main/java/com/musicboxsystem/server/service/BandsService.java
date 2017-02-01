@@ -48,6 +48,17 @@ public class BandsService  implements ServiceInterface<Bands>{
         return bandsRepository.save(obj);
     }
 
+
+    public boolean bandExist(Bands obj){
+        List<Bands> bandsList = bandsRepository.findAll();
+        for (Bands band: bandsList) {
+            if(band.getName().equals(obj.getName()))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     public Bands findById(String id) {
         Bands bands = bandsRepository.findOne(id);

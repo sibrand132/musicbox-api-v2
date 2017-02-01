@@ -1,6 +1,8 @@
 package com.musicboxsystem.server.service;
 
+import com.musicboxsystem.server.domain.Bands;
 import com.musicboxsystem.server.domain.Users;
+import com.musicboxsystem.server.repository.BandsRepository;
 import com.musicboxsystem.server.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,10 +19,15 @@ public class UsersService  implements ServiceInterface <Users> {
 
     public UsersRepository usersRepository;
 
-    @Autowired
-    public UsersService(UsersRepository usersRepository) {
+    public BandsRepository bandsRepository;
+
+    public UsersService(UsersRepository usersRepository, BandsRepository bandsRepository) {
         this.usersRepository = usersRepository;
+        this.bandsRepository = bandsRepository;
     }
+
+    @Autowired
+
 
     @Override
     public List<Users> getObj() {
@@ -44,8 +51,53 @@ public class UsersService  implements ServiceInterface <Users> {
     }
 
     @Override
-    public Users create(Users obj) {
-        return usersRepository.save(obj);
+    public Users create(Users obj)  {
+        Users user = new Users(obj.getName(), obj.getEmail(), obj.getRole(),obj.getPass());
+        return usersRepository.save(user);
+    }
+
+    public boolean userExist(Users obj){
+        List<Users> usersList = usersRepository.findAll();
+        for (Users user: usersList) {
+            if(user.getEmail().equals(obj.getEmail()))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Users findByEmail(String email) {
+        List<Users> usersList = usersRepository.findAll();
+        Users userReturn = new Users();
+
+            for (Users user: usersList) {
+                if(user.getEmail().equals(email))
+                {
+                    userReturn=user;
+                    break;
+                }
+            }
+            return userReturn;
+
+    }
+
+    public String bandIdIfLeader(String email){
+        List<Bands> bandsList = bandsRepository.findAll();
+        String bandId="";
+        for(Bands band : bandsList){
+            if(band.getLeader().equals(email)){
+                bandId=band.getId();
+            }
+        }
+        return bandId;
+    }
+
+    public boolean passConfirmation(String pass, String passConf){
+        if(pass.equals(passConf))
+            return true;
+        else
+            return false;
     }
 
     @Override

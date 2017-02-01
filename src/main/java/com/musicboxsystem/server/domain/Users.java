@@ -1,11 +1,13 @@
 package com.musicboxsystem.server.domain;
 
+import org.hibernate.validator.constraints.Email;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.jws.soap.SOAPBinding;
+import javax.validation.Constraint;
 import javax.validation.constraints.NotNull;
-
+import javax.validation.constraints.Size;
 /**
  * Created by Sibrand on 2017-01-04.
  */
@@ -16,17 +18,22 @@ public class Users {
     @Id
     public String id;
 
-    @NotNull(message = "Can't be empty")
+   @NotNull(message = "Can't be empty")
+   @Size(min = 3, message="Your name must more then 3 characters")
     public String name;
 
     @NotNull(message = "Can't be empty")
+    @Email(message = "Invalid email")
     public String email;
 
-    @NotNull(message = "Can't be empty")
     public String role;
-
     @NotNull(message = "Can't be empty")
+    @Size(min = 6, max = 15, message = "Your password must between 6 and 15 characters")
     public String pass;
+
+
+    @Size(min = 6, max = 15, message = "Your password must between 6 and 15 characters")
+    public String passconf;
 
     public Users(){}
     public Users(String name, String email, String role, String pass) {
@@ -56,6 +63,10 @@ public class Users {
         return pass;
     }
 
+    public String getPassconf() {
+        return passconf;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -74,6 +85,10 @@ public class Users {
 
     public void setPass(String pass) {
         this.pass = pass;
+    }
+
+    public void setPassconf(String passconf) {
+        this.passconf = passconf;
     }
 }
 

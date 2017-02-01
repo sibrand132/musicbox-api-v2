@@ -20,11 +20,11 @@ public class Bands {
     public String name;
 
     public String about;
-    @NotNull(message = "Can't be empty")
+
     public String established;
-    @NotNull(message = "Can't be empty")
+
     public String leader;
-    @NotNull(message = "Can't be empty")
+
     public String status;
 
     public Bands(){}
