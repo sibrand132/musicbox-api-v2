@@ -1,10 +1,16 @@
 package com.musicboxsystem.server.rest;
 
+import com.mongodb.gridfs.GridFSDBFile;
 import com.musicboxsystem.server.domain.*;
 import com.musicboxsystem.server.service.*;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.*;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 
@@ -18,11 +24,24 @@ import org.springframework.web.multipart.MultipartFile;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.crypto.MacProvider;
+import sun.misc.IOUtils;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Key;
 
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Null;
+import javax.xml.bind.DatatypeConverter;
 
 import java.io.*;
 import java.util.*;
@@ -196,7 +215,6 @@ public class AppRESTController {
         response.clear();
         String password = usersEntity.getPass();
         String hashedPass = passwordEncoder().encodePassword(password, this.getSalt());
-        System.out.println(this.getSalt());
 
         if(!usersService.passConfirmation(usersEntity.getPass(),usersEntity.getPassconf()))
         {
@@ -290,19 +308,50 @@ public class AppRESTController {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/updateUsers/{id}")
     public @ResponseBody Map<String,Object> updateUsers(@Valid @RequestBody Users usersEntity, BindingResult bindingResult, @PathVariable String id){
+        response.clear();
 
-        if (checkError("albums", bindingResult))
+        String password = usersEntity.getPass();
+        String hashedPass = passwordEncoder().encodePassword(password, this.getSalt());
+
+        if(!usersService.passConfirmation(usersEntity.getPass(),usersEntity.getPassconf()))
         {
-            usersService.update(usersEntity, id);
+            ObjectError errorPass = new ObjectError("pass","Invalid password");
+            bindingResult.addError(errorPass);
+
+            ObjectError errorPassconf = new ObjectError("passconf","Invalid password ");
+            bindingResult.addError(errorPassconf);
+
+
+            response.put("passconf", "Invalid password confirmation");
+            response.put("pass", "Invalid password");
+        }
+
+        if(bindingResult.hasErrors())
+        {
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            response.put("message", "Error");
+
+            for(FieldError error: errors)
+            {
+                response.put(error.getField(),error.getDefaultMessage());
+            }
+        }
+        else
+        {
+            usersEntity.setPass(hashedPass);
+            usersService.update(usersEntity,id);
             response.put("message", "Success");
         }
 
+//////////////
         return response;
     }
 
 
 
-    ///////Members////////
+////////////////////////////Members///////////////////////////////////
+
     @RequestMapping(method = RequestMethod.GET, value = "/getMembers")
     public @ResponseBody
     List<Members> findAllMembers(){
@@ -319,6 +368,34 @@ public class AppRESTController {
         }
         return users;
     }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getBandByUsersId/{id}")
+    public @ResponseBody List<Bands> findMembersByUsersId(@PathVariable String id){
+        List<Members> members = membersService.findByUsersId(id);
+        List<Bands> bands = new ArrayList<Bands>();
+        for (Members member:members)
+        {
+            bands.add(bandsService.findById(member.getBandsId()));
+        }
+        return bands;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/checkToken")
+    public @ResponseBody Map<String,Object> checkProfile(@Valid @RequestBody Token token){
+        response.clear();
+        try {
+
+           Jwts.parser().setSigningKey(this.salt).parseClaimsJws(token.getToken());
+            response.put("token", token.getToken());
+            response.put("message", "Success");
+        } catch (SignatureException e) {
+            response.put("token", "fake");
+            response.put("message", e.getMessage());
+        }
+
+        return response;
+    }
+
 
     @RequestMapping(method = RequestMethod.POST, value = "/saveMember/{idBand}/{idUser}")
     public @ResponseBody
@@ -421,6 +498,7 @@ public class AppRESTController {
         }
     }
 
+
     @RequestMapping(value="/uploadAlbumsLogo/{albumsId}", method=RequestMethod.POST)
     public @ResponseBody String uploadAlbumsLogo(@RequestParam("file") MultipartFile file, @PathVariable String albumsId){
         String name = file.getOriginalFilename();
@@ -462,6 +540,53 @@ public class AppRESTController {
             return "You failed to upload " + name + " because the file was empty.";
         }
     }
+
+    @RequestMapping(value="/uploadUsersAvatar/{usersId}", method=RequestMethod.POST)
+    public @ResponseBody String uploadUsersAvatar(@RequestParam("file") MultipartFile file, @PathVariable String usersId){
+        String name = file.getOriginalFilename();
+        if (!file.isEmpty()) {
+            try {
+                File dir = new File("uploads/usersAvatar/"+usersId);
+                dir.mkdir();
+                byte[] bytes = file.getBytes();
+                BufferedOutputStream stream =
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/usersAvatar/"+ usersId + "/" + usersId +".png" )));
+                stream.write(bytes);
+                stream.close();
+                return "You successfully uploaded " + name + " into " + name + "-uploaded !";
+            } catch (Exception e) {
+                return "You failed to upload " + name + " => " + e.getMessage();
+            }
+        } else {
+            return "You failed to upload " + name + " because the file was empty.";
+        }
+    }
+    @RequestMapping(value = "/checkAvatar/{userId}", method = RequestMethod.GET)
+    public @ResponseBody Map<String,Object> checkAvatar(@PathVariable String userId){
+        response.clear();
+        File file = new File("uploads/usersAvatar/"+userId);
+        File [] files = file.listFiles();
+        if(files.length==0)
+            response.put("avatar", false);
+        else
+            response.put("avatar", true);
+        return response;
+    }
+
+
+
+
+
+    @RequestMapping("/getUsersAvatar/{personId}")
+    @ResponseBody
+    public HttpEntity<byte[]> getUsersAvatar(@PathVariable String personId) throws IOException {
+        byte[] image = org.apache.commons.io.FileUtils.readFileToByteArray(new File("uploads/usersAvatar/"+ personId + "/"+personId+ ".png"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentLength(image.length);
+        return new HttpEntity<byte[]>(image, headers);
+    }
+
 
 
 
