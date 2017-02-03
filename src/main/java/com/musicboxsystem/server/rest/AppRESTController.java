@@ -359,9 +359,9 @@ public class AppRESTController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getUsersByBandsId/{id}")
-    public @ResponseBody List<Users> findMembersByBandsId(@PathVariable String id){
+    public @ResponseBody List<Users> findUsersByBandsId(@PathVariable String id){
         List<Members> members = membersService.findByBandsId(id);
-        List<Users> users = new ArrayList<Users>();
+        List<Users> users = new ArrayList<>();
         for (Members member:members)
         {
             users.add(usersService.findById(member.getUsersId()));
@@ -369,8 +369,14 @@ public class AppRESTController {
         return users;
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/getMembersByBandsId/{id}")
+    public @ResponseBody List<Members> findMembersByBandsId(@PathVariable String id){
+        List<Members> members = membersService.findByBandsId(id);
+        return members;
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/getBandByUsersId/{id}")
-    public @ResponseBody List<Bands> findMembersByUsersId(@PathVariable String id){
+    public @ResponseBody List<Bands> find(@PathVariable String id){
         List<Members> members = membersService.findByUsersId(id);
         List<Bands> bands = new ArrayList<Bands>();
         for (Members member:members)
@@ -407,8 +413,16 @@ public class AppRESTController {
         return response;
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteMembers/{id}")
-    public @ResponseBody void deleteMembers( @PathVariable String id){
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteMembers/{id}/{bandId}")
+    public @ResponseBody void deleteMembers( @PathVariable String id, @PathVariable String bandId){
+        List<Members> members = membersService.findByUsersId(id);
+        List<Members> membersList = membersService.findByBandsId(bandId);
+        for(Members member : members){
+            for(Members temp : membersList){
+                if (member.getId().equals(temp.getId()))
+                    membersService.delete(member.getId());
+            }
+        }
         membersService.delete(id);
     }
 
@@ -446,11 +460,9 @@ public class AppRESTController {
     @RequestMapping(method = RequestMethod.POST, value = "/saveTracks")
     public @ResponseBody Map<String,Object> createTracks(@Valid @RequestBody Tracks tracksEntity, BindingResult bindingResult){
 
-        if (checkError("bands", bindingResult))
-        {
             tracksService.create(tracksEntity);
             response.put("message", "Success");
-        }
+
 
         return response;
     }
@@ -486,7 +498,7 @@ public class AppRESTController {
                 dir.mkdir();
                 byte[] bytes = file.getBytes();
                 BufferedOutputStream stream =
-                        new BufferedOutputStream(new FileOutputStream(new File("uploads/bandsLogo/"+ bandsId + "/" + name )));
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/bandsLogo/"+ bandsId + "/" + bandsId + ".png" )));
                 stream.write(bytes);
                 stream.close();
                 return "You successfully uploaded " + name + " into " + name + "-uploaded !";
@@ -508,7 +520,7 @@ public class AppRESTController {
                 dir.mkdir();
                 byte[] bytes = file.getBytes();
                 BufferedOutputStream stream =
-                        new BufferedOutputStream(new FileOutputStream(new File("uploads/albumsLogo/"+ albumsId + "/" + name )));
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/albumsLogo/"+ albumsId + "/" + albumsId + ".png" )));
                 stream.write(bytes);
                 stream.close();
                 return "You successfully uploaded " + name + " into " + name + "-uploaded !";
@@ -541,6 +553,9 @@ public class AppRESTController {
         }
     }
 
+
+
+
     @RequestMapping(value="/uploadUsersAvatar/{usersId}", method=RequestMethod.POST)
     public @ResponseBody String uploadUsersAvatar(@RequestParam("file") MultipartFile file, @PathVariable String usersId){
         String name = file.getOriginalFilename();
@@ -561,6 +576,7 @@ public class AppRESTController {
             return "You failed to upload " + name + " because the file was empty.";
         }
     }
+
     @RequestMapping(value = "/checkAvatar/{userId}", method = RequestMethod.GET)
     public @ResponseBody Map<String,Object> checkAvatar(@PathVariable String userId){
         response.clear();
@@ -586,6 +602,60 @@ public class AppRESTController {
         headers.setContentLength(image.length);
         return new HttpEntity<byte[]>(image, headers);
     }
+
+    @RequestMapping("/getBandLogo/{bandId}")
+    @ResponseBody
+    public HttpEntity<byte[]> getBandsLogo(@PathVariable String bandId) throws IOException {
+        byte[] image = org.apache.commons.io.FileUtils.readFileToByteArray(new File("uploads/bandsLogo/"+ bandId + "/"+bandId+ ".png"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentLength(image.length);
+        return new HttpEntity<byte[]>(image, headers);
+    }
+
+    @RequestMapping(value = "/checkBandLogo/{bandId}", method = RequestMethod.GET)
+    public @ResponseBody Map<String,Object> checkBandLogo(@PathVariable String bandId){
+        response.clear();
+        File file = new File("uploads/bandsLogo/"+bandId);
+        File [] files = file.listFiles();
+        try{
+            if(files.length==0)
+                response.put("logo", false);
+            else
+                response.put("logo", true);
+        }
+        catch (NullPointerException e){
+            response.put("logo", false);
+        }
+
+        return response;
+    }
+
+    @RequestMapping("/getAlbumsLogo/{albumId}")
+    @ResponseBody
+    public HttpEntity<byte[]> getAlbumsLogo(@PathVariable String albumId) throws IOException {
+        byte[] image = org.apache.commons.io.FileUtils.readFileToByteArray(new File("uploads/albumsLogo/"+ albumId + "/"+albumId+ ".png"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentLength(image.length);
+        return new HttpEntity<byte[]>(image, headers);
+    }
+
+    @RequestMapping(value = "/checkAlbumLogo/{albumId}", method = RequestMethod.GET)
+    public @ResponseBody Map<String,Object> checkAlbumLogo(@PathVariable String albumId){
+        response.clear();
+        File file = new File("uploads/albumsLogo/"+albumId);
+        File [] files = file.listFiles();
+        if(files.length==0)
+            response.put("logo", false);
+        else
+            response.put("logo", true);
+        return response;
+    }
+
+
+
+
 
 
 
