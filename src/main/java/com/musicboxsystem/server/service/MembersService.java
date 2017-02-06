@@ -55,6 +55,18 @@ public class MembersService implements ServiceInterface <Members>, CustomInterfa
         return members;
     }
 
+    public Members findByUsersBandsId(String bandsId, String usersId) {
+        List<Members> membersList = membersRepository.findAll();
+        Members memberTmp = new Members();
+        for(int i=0; i<membersList.size(); i++)
+        {
+            if(membersList.get(i).getBandsId().equals(bandsId) && membersList.get(i).getUsersId().equals(usersId))
+                memberTmp=membersList.get(i);
+        }
+        return memberTmp;
+    }
+
+
     @Override
     public Members update(Members obj, String id) {
         Members members = membersRepository.findOne(id);

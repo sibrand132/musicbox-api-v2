@@ -358,6 +358,12 @@ public class AppRESTController {
         return membersService.getObj();
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/getMember/{bandsId}/{usersId}")
+    public @ResponseBody
+    Members findMember(@PathVariable String bandsId, @PathVariable String usersId){
+        return membersService.findByUsersBandsId(bandsId,usersId);
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/getUsersByBandsId/{id}")
     public @ResponseBody List<Users> findUsersByBandsId(@PathVariable String id){
         List<Members> members = membersService.findByBandsId(id);
@@ -378,7 +384,7 @@ public class AppRESTController {
     @RequestMapping(method = RequestMethod.GET, value = "/getBandByUsersId/{id}")
     public @ResponseBody List<Bands> find(@PathVariable String id){
         List<Members> members = membersService.findByUsersId(id);
-        List<Bands> bands = new ArrayList<Bands>();
+        List<Bands> bands = new ArrayList<>();
         for (Members member:members)
         {
             bands.add(bandsService.findById(member.getBandsId()));
@@ -457,13 +463,23 @@ public class AppRESTController {
         return tracksService.findByBandsId(id);
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/getTracksByUsersId/{id}")
+    public @ResponseBody List<Tracks> findTracksByUsersId(@PathVariable String id){
+        List<Members> members = membersService.findByUsersId(id);
+        List<Tracks> union = new ArrayList<Tracks>();
+        List<Tracks> tracks;
+        for(Members member : members){
+                tracks=tracksService.findByMembersId(member.getId());
+                union.addAll(tracks);
+        }
+        return union;
+    }
+
     @RequestMapping(method = RequestMethod.POST, value = "/saveTracks")
     public @ResponseBody Map<String,Object> createTracks(@Valid @RequestBody Tracks tracksEntity, BindingResult bindingResult){
-
+            tracksEntity.setUploaded("false");
             tracksService.create(tracksEntity);
             response.put("message", "Success");
-
-
         return response;
     }
 
@@ -475,12 +491,9 @@ public class AppRESTController {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/updateTracks/{id}")
     public @ResponseBody Map<String,Object> updateTracks(@Valid @RequestBody Tracks tracksEntity, BindingResult bindingResult, @PathVariable String id){
-
-        if (checkError("members", bindingResult))
-        {
             tracksService.update(tracksEntity, id);
             response.put("message", "Success");
-        }
+
 
         return response;
     }
@@ -589,13 +602,15 @@ public class AppRESTController {
         return response;
     }
 
-
-
-
-
     @RequestMapping("/getUsersAvatar/{personId}")
     @ResponseBody
     public HttpEntity<byte[]> getUsersAvatar(@PathVariable String personId) throws IOException {
+        Path path = Paths.get("uploads/usersAvatar/"+ personId);
+        Path path2 = Paths.get("uploads/usersAvatar/"+ personId + "/"+personId+ ".png");
+
+        if (Files.notExists(path) || Files.notExists(path2)) {
+            throw new FileNotFoundException("File not exist");
+        }
         byte[] image = org.apache.commons.io.FileUtils.readFileToByteArray(new File("uploads/usersAvatar/"+ personId + "/"+personId+ ".png"));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);
@@ -603,15 +618,25 @@ public class AppRESTController {
         return new HttpEntity<byte[]>(image, headers);
     }
 
+
     @RequestMapping("/getBandLogo/{bandId}")
     @ResponseBody
     public HttpEntity<byte[]> getBandsLogo(@PathVariable String bandId) throws IOException {
+        Path path = Paths.get("uploads/bandsLogo/"+bandId);
+        Path path2 = Paths.get("uploads/bandsLogo/"+ bandId + "/"+bandId+ ".png");
+
+        if (Files.notExists(path) || Files.notExists(path2)) {
+            throw new FileNotFoundException("File not exist");
+        }
+
         byte[] image = org.apache.commons.io.FileUtils.readFileToByteArray(new File("uploads/bandsLogo/"+ bandId + "/"+bandId+ ".png"));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);
         headers.setContentLength(image.length);
         return new HttpEntity<byte[]>(image, headers);
     }
+
+
 
     @RequestMapping(value = "/checkBandLogo/{bandId}", method = RequestMethod.GET)
     public @ResponseBody Map<String,Object> checkBandLogo(@PathVariable String bandId){
@@ -631,9 +656,15 @@ public class AppRESTController {
         return response;
     }
 
+
     @RequestMapping("/getAlbumsLogo/{albumId}")
     @ResponseBody
     public HttpEntity<byte[]> getAlbumsLogo(@PathVariable String albumId) throws IOException {
+        Path path = Paths.get("uploads/albumsLogo/"+ albumId );
+        Path path2 = Paths.get("uploads/albumsLogo/"+ albumId + "/"+albumId+ ".png");
+        if (Files.notExists(path) || Files.notExists(path2)) {
+            throw new FileNotFoundException("File not exist");
+        }
         byte[] image = org.apache.commons.io.FileUtils.readFileToByteArray(new File("uploads/albumsLogo/"+ albumId + "/"+albumId+ ".png"));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);

@@ -1,7 +1,12 @@
 package com.musicboxsystem.server.service;
 
+import com.musicboxsystem.server.domain.Bands;
 import com.musicboxsystem.server.domain.Tracks;
+import com.musicboxsystem.server.domain.Users;
+import com.musicboxsystem.server.repository.BandsRepository;
+import com.musicboxsystem.server.repository.MembersRepository;
 import com.musicboxsystem.server.repository.TracksRepository;
+import com.musicboxsystem.server.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import static java.util.stream.Collectors.toList;
@@ -15,10 +20,12 @@ import java.util.List;
 public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceTracks{
 
     public TracksRepository tracksRepository;
+    public MembersRepository membersRepository;
 
     @Autowired
-    public TracksService(TracksRepository tracksRepository) {
+    public TracksService(TracksRepository tracksRepository, MembersRepository membersRepository) {
         this.tracksRepository = tracksRepository;
+        this.membersRepository = membersRepository;
     }
 
     @Override
@@ -39,6 +46,7 @@ public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceT
         dto.setComment(tracks.getComment());
         dto.setDate(tracks.getDate());
         dto.setInstrument(tracks.getInstrument());
+        dto.setUploaded(tracks.getUploaded());
         return dto;
     }
 
@@ -59,6 +67,7 @@ public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceT
         tracks.setInstrument(obj.getInstrument());
         tracks.setComment(obj.getComment());
         tracks.setDate(obj.getDate());
+        tracks.setUploaded(obj.getUploaded());
         return tracksRepository.save(tracks);
     }
 
@@ -70,6 +79,13 @@ public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceT
     @Override
     public List<Tracks> findByBandsId(String id) {
         List<Tracks> tracksList = tracksRepository.findByBandsId(id);
+        return  convertToDTOs(tracksList);
+    }
+
+
+    @Override
+    public List<Tracks> findByMembersId(String id) {
+        List<Tracks> tracksList = tracksRepository.findByMembersId(id);
         return  convertToDTOs(tracksList);
     }
 }

@@ -9,5 +9,6 @@ import java.util.List;
  */
 public interface CustomInterfaceTracks {
     List<Tracks> findByBandsId(String id);
+    List<Tracks> findByMembersId(String id);
 
 }

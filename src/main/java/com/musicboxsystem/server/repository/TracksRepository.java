@@ -12,4 +12,5 @@ import java.util.List;
 @Repository
 public interface TracksRepository extends MongoRepository<Tracks, String> {
     List<Tracks> findByBandsId(String Id);
+    List<Tracks> findByMembersId(String Id);
 }

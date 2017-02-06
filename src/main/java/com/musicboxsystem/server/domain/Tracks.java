@@ -25,14 +25,17 @@ public class Tracks {
 
     public String date;
 
+    public String uploaded;
+
     public Tracks(){}
 
-    public Tracks(String comment, String membersId, String bandsId, String instrument, String date) {
+    public Tracks(String comment, String membersId, String bandsId, String instrument, String date, String uploaded) {
         this.comment = comment;
         this.membersId = membersId;
         this.bandsId = bandsId;
         this.instrument = instrument;
         this.date = date;
+        this.uploaded = uploaded;
     }
 
     public String getId() {
@@ -81,5 +84,13 @@ public class Tracks {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(String uploaded) {
+        this.uploaded = uploaded;
     }
 }
