@@ -566,9 +566,7 @@ public class AppRESTController {
         }
     }
 
-
-
-
+    
     @RequestMapping(value="/uploadUsersAvatar/{usersId}", method=RequestMethod.POST)
     public @ResponseBody String uploadUsersAvatar(@RequestParam("file") MultipartFile file, @PathVariable String usersId){
         String name = file.getOriginalFilename();
