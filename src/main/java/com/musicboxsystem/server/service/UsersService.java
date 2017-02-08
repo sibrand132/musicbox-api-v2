@@ -47,12 +47,13 @@ public class UsersService  implements ServiceInterface <Users> {
         dto.setEmail(users.getEmail());
         dto.setRole(users.getRole());
         dto.setPass(users.getPass());
+        dto.setLeader(users.getLeader());
         return dto;
     }
 
     @Override
     public Users create(Users obj)  {
-        Users user = new Users(obj.getName(), obj.getEmail(), obj.getRole(),obj.getPass());
+        Users user = new Users(obj.getName(), obj.getEmail(), obj.getRole(),obj.getPass(),obj.getLeader());
         return usersRepository.save(user);
     }
 
@@ -112,6 +113,7 @@ public class UsersService  implements ServiceInterface <Users> {
         users.setName(obj.getName());
         users.setEmail(obj.getEmail());
         users.setRole(obj.getRole());
+        users.setLeader(obj.getLeader());
         return usersRepository.save(users);
     }
 

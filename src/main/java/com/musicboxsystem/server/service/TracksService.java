@@ -47,6 +47,7 @@ public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceT
         dto.setDate(tracks.getDate());
         dto.setInstrument(tracks.getInstrument());
         dto.setUploaded(tracks.getUploaded());
+        dto.setFileName(tracks.getFileName());
         return dto;
     }
 
@@ -68,6 +69,7 @@ public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceT
         tracks.setComment(obj.getComment());
         tracks.setDate(obj.getDate());
         tracks.setUploaded(obj.getUploaded());
+        tracks.setFileName(obj.getFileName());
         return tracksRepository.save(tracks);
     }
 

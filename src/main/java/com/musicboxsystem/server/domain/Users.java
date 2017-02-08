@@ -35,12 +35,16 @@ public class Users {
     @Size(min = 6, max = 15, message = "Your password must between 6 and 15 characters")
     public String passconf;
 
+    public String leader;
+
     public Users(){}
-    public Users(String name, String email, String role, String pass) {
+
+    public Users(String name, String email, String role, String pass, String leader) {
         this.name = name;
         this.email = email;
         this.role = role;
         this.pass = pass;
+        this.leader = leader;
     }
 
     public String getId() {
@@ -89,6 +93,23 @@ public class Users {
 
     public void setPassconf(String passconf) {
         this.passconf = passconf;
+    }
+
+    public String getLeader() {
+        return leader;
+    }
+
+    public void setLeader(String leader) {
+        this.leader = leader;
+    }
+
+    @Override
+    public boolean equals(Object anObject) {
+        if (!(anObject instanceof Users)) {
+            return false;
+        }
+        Users otherMember = (Users)anObject;
+        return otherMember.getEmail().equals(getEmail());
     }
 }
 

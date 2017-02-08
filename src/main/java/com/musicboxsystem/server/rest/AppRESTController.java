@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.security.Key;
 
 import javax.imageio.ImageIO;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -59,16 +60,18 @@ public class AppRESTController {
     private final UsersService usersService;
     private final MembersService membersService;
     private final TracksService tracksService;
+    private final SongsService songsService;
     private final Map<String,Object> response = new LinkedHashMap<>();
 
 
 
-    public AppRESTController(AlbumsService albumsService, BandsService bandsService, UsersService usersService, MembersService membersService, TracksService tracksService) {
+    public AppRESTController(AlbumsService albumsService, BandsService bandsService, UsersService usersService, MembersService membersService, TracksService tracksService, SongsService songsService) {
         this.albumsService = albumsService;
         this.bandsService = bandsService;
         this.usersService = usersService;
         this.membersService = membersService;
         this.tracksService = tracksService;
+        this.songsService = songsService;
     }
 
     @Autowired
@@ -156,6 +159,10 @@ public class AppRESTController {
 
     }
 
+
+
+
+    ////////////////////////////            ALBUMS              ////////////////////////////////////
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteAlbums/{id}")
     public @ResponseBody void deleteAlbums( @PathVariable String id){
         albumsService.delete(id);
@@ -199,10 +206,25 @@ public class AppRESTController {
         return response;
     }
 
+    //////////////////////////////       USERS         ////////////////////////////////////
     @RequestMapping(method = RequestMethod.GET, value = "/getUsers")
     public @ResponseBody
     List<Users> findAllUsers(){
         return usersService.getObj();
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/getUsersNotMembers")
+    public @ResponseBody List<Users> findUsersNotMembers(@Valid @RequestBody UsersWrapper members){
+        List<Users> usersList = usersService.getObj();
+        usersList.removeAll(members.getUsersList());
+
+        List<Users> usersListTmp= new ArrayList<>();
+        usersListTmp.addAll(usersList);
+        for(Users user: usersList){
+            if(user.getRole().equals("admin"))
+                usersListTmp.remove(user);
+        }
+        return usersListTmp;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getUsersById/{id}")
@@ -248,6 +270,7 @@ public class AppRESTController {
         }
         else
         {
+                usersEntity.setLeader("false");
                 usersEntity.setRole("user");
                 usersEntity.setPass(hashedPass);
                 usersService.create(usersEntity);
@@ -300,11 +323,28 @@ public class AppRESTController {
         return response;
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = "/checkToken")
+    public @ResponseBody Map<String,Object> checkProfile(@Valid @RequestBody Token token){
+        response.clear();
+        try {
+
+            Jwts.parser().setSigningKey(this.salt).parseClaimsJws(token.getToken());
+            response.put("token", token.getToken());
+            response.put("message", "Success");
+        } catch (SignatureException e) {
+            response.put("token", "fake");
+            response.put("message", e.getMessage());
+        }
+
+        return response;
+    }
+
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteUsers/{id}")
     public @ResponseBody void deleteUsers( @PathVariable String id){
         usersService.delete(id);
         membersService.deleteAll(id);
     }
+
 
     @RequestMapping(method = RequestMethod.PUT, value = "/updateUsers/{id}")
     public @ResponseBody Map<String,Object> updateUsers(@Valid @RequestBody Users usersEntity, BindingResult bindingResult, @PathVariable String id){
@@ -344,13 +384,30 @@ public class AppRESTController {
             response.put("message", "Success");
         }
 
-//////////////
         return response;
     }
 
 
 
-////////////////////////////Members///////////////////////////////////
+    @RequestMapping(method = RequestMethod.POST, value = "/setLeader")
+    public @ResponseBody Map<String,Object> setLeader(@Valid @RequestBody Email email) {
+        response.clear();
+        Users user = usersService.findByEmail(email.getEmail());
+        user.setLeader("true");
+        usersService.update(user,user.getId());
+        response.put("message", "Success");
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getUserByMemberId/{memberId}")
+    public @ResponseBody
+    Users findUsers( @PathVariable String memberId){
+        Members member = membersService.findById(memberId);
+        return usersService.findById(member.getUsersId());
+
+    }
+
+////////////////////////////          MEMBERS                 ///////////////////////////////////
 
     @RequestMapping(method = RequestMethod.GET, value = "/getMembers")
     public @ResponseBody
@@ -392,23 +449,6 @@ public class AppRESTController {
         return bands;
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/checkToken")
-    public @ResponseBody Map<String,Object> checkProfile(@Valid @RequestBody Token token){
-        response.clear();
-        try {
-
-           Jwts.parser().setSigningKey(this.salt).parseClaimsJws(token.getToken());
-            response.put("token", token.getToken());
-            response.put("message", "Success");
-        } catch (SignatureException e) {
-            response.put("token", "fake");
-            response.put("message", e.getMessage());
-        }
-
-        return response;
-    }
-
-
     @RequestMapping(method = RequestMethod.POST, value = "/saveMember/{idBand}/{idUser}")
     public @ResponseBody
     Map<String, Object> create(@Valid @RequestBody Members membersEntity, BindingResult bindingResult, @PathVariable String idBand, @PathVariable String idUser){
@@ -447,6 +487,8 @@ public class AppRESTController {
 
 
 
+
+    //////////////////////////     TRACKS      ///////////////////////////////////
     @RequestMapping(method = RequestMethod.GET, value = "/getTracks")
     public @ResponseBody
     List<Tracks> findAllTracks(){
@@ -495,6 +537,53 @@ public class AppRESTController {
             response.put("message", "Success");
 
 
+        return response;
+    }
+
+
+    //////////////////////////////////////         Songs    ///////////////////////////////////////////////
+    @RequestMapping(method = RequestMethod.GET, value = "/getSongs")
+    public @ResponseBody
+    List<Songs> findAllSongs(){
+        return songsService.getObj();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getSongsById/{id}")
+    public @ResponseBody
+    Songs findSongs(@PathVariable String id){
+        return songsService.findById(id);
+    }
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getSongsByBandsId/{bandId}")
+    public @ResponseBody
+    List<Songs> findBandsSongs(@PathVariable String bandId){
+        return songsService.findByBandsId(bandId);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getSongsByAlbumsId/{albumsId}")
+    public @ResponseBody
+    List<Songs> findAlbumsSongs(@PathVariable String albumsId){
+        return songsService.findByAlbumsId(albumsId);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/saveSongs")
+    public @ResponseBody Map<String,Object> createSongs(@Valid @RequestBody Songs songsEntity, BindingResult bindingResult){
+        songsEntity.setUploaded("false");
+        songsService.create(songsEntity);
+        response.put("message", "Success");
+        return response;
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteSongs/{id}")
+    public @ResponseBody void deleteSongs( @PathVariable String id){
+        songsService.delete(id);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/updateSongs/{id}")
+    public @ResponseBody Map<String,Object> updateSongs(@Valid @RequestBody Songs songsEntity, BindingResult bindingResult, @PathVariable String id){
+        songsService.update(songsEntity, id);
+        response.put("message", "Success");
         return response;
     }
 
@@ -566,7 +655,9 @@ public class AppRESTController {
         }
     }
 
-    
+
+
+
     @RequestMapping(value="/uploadUsersAvatar/{usersId}", method=RequestMethod.POST)
     public @ResponseBody String uploadUsersAvatar(@RequestParam("file") MultipartFile file, @PathVariable String usersId){
         String name = file.getOriginalFilename();
@@ -616,7 +707,6 @@ public class AppRESTController {
         return new HttpEntity<byte[]>(image, headers);
     }
 
-
     @RequestMapping("/getBandLogo/{bandId}")
     @ResponseBody
     public HttpEntity<byte[]> getBandsLogo(@PathVariable String bandId) throws IOException {
@@ -633,7 +723,6 @@ public class AppRESTController {
         headers.setContentLength(image.length);
         return new HttpEntity<byte[]>(image, headers);
     }
-
 
 
     @RequestMapping(value = "/checkBandLogo/{bandId}", method = RequestMethod.GET)
@@ -683,9 +772,64 @@ public class AppRESTController {
     }
 
 
+    @RequestMapping(value="/uploadSongs/{albumsId}", method=RequestMethod.POST)
+    public @ResponseBody String uploadSongs(@RequestParam("file") MultipartFile file, @PathVariable String albumsId){
+        String name = file.getOriginalFilename();
+        if (!file.isEmpty()) {
+            try {
+                File dir = new File("uploads/songs/"+albumsId);
+                dir.mkdir();
+                byte[] bytes = file.getBytes();
+                BufferedOutputStream stream =
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/songs/"+ albumsId + "/" + name )));
+                stream.write(bytes);
+                stream.close();
+                return "You successfully uploaded " + name + " into " + name + "-uploaded !";
+            } catch (Exception e) {
+                return "You failed to upload " + name + " => " + e.getMessage();
+            }
+        } else {
+            return "You failed to upload " + name + " because the file was empty.";
+        }
+    }
 
 
+    @RequestMapping("/downloadSongs/{albumsId}/{fileName:.+}")
+    public void downloadSongs( HttpServletRequest request, HttpServletResponse response, @PathVariable String albumsId, @PathVariable("fileName") String fileName)
+    {
+        String dataDirectory = "uploads/songs/"+albumsId;
+        Path file = Paths.get(dataDirectory, fileName);
+        response.setContentType("application/force-download");
+        response.addHeader("Content-Disposition", "attachment; filename="+fileName);
+        try
+        {
+            Files.copy(file, response.getOutputStream());
+            response.getOutputStream().flush();
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
+
+    private static final int BUFFER_SIZE = 4096;
+    @RequestMapping("/downloadTrack/{bandId}/{fileName:.+}")
+    public void downloadTrack( HttpServletRequest request, HttpServletResponse response, @PathVariable String bandId, @PathVariable("fileName") String fileName)
+    {
+        String dataDirectory = "uploads/tracks/"+bandId;
+        Path file = Paths.get(dataDirectory, fileName);
+        System.out.println(file.getFileName());
+            response.setContentType("application/force-download");
+            response.addHeader("Content-Disposition", "attachment; filename="+fileName);
+            try
+            {
+                Files.copy(file, response.getOutputStream());
+                response.getOutputStream().flush();
+            }
+            catch (IOException ex) {
+                ex.printStackTrace();
+            }
+    }
 
 
 
@@ -705,9 +849,5 @@ public class AppRESTController {
         else {
             return true;
         }
-
-
     }
-
-
 }
