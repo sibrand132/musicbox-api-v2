@@ -19,14 +19,16 @@ public class Songs {
     public String bandsId;
     public String albumsId;
     public String uploaded;
+    public String fileName;
 
     public Songs(){}
-    public Songs(String date, String title, String bandsId, String albumsId, String uploaded) {
+    public Songs(String date, String title, String bandsId, String albumsId, String uploaded, String fileName) {
         this.date = date;
         this.title = title;
         this.bandsId = bandsId;
         this.albumsId = albumsId;
         this.uploaded = uploaded;
+        this.fileName = fileName;
     }
 
     public String getId() {
@@ -75,5 +77,13 @@ public class Songs {
 
     public void setUploaded(String uploaded) {
         this.uploaded = uploaded;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }

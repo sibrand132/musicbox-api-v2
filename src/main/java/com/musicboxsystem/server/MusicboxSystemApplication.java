@@ -33,6 +33,9 @@ public class MusicboxSystemApplication implements CommandLineRunner{
 	@Autowired
 	public TracksService tracksService;
 
+	@Autowired
+	public SongsService songsService;
+
 	public static void main(String[] args) {
 		SpringApplication.run(MusicboxSystemApplication.class, args);
 	}

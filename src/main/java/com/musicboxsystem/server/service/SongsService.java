@@ -43,6 +43,7 @@ public class SongsService implements ServiceInterface<Songs>, CustomInterfaceSon
         dto.setAlbumsId(songs.getAlbumsId());
         dto.setTitle(songs.getTitle());
         dto.setUploaded(songs.getUploaded());
+        dto.setFileName(songs.getFileName());
         return dto;
     }
 
@@ -66,6 +67,7 @@ public class SongsService implements ServiceInterface<Songs>, CustomInterfaceSon
         songs.setDate(obj.getDate());
         songs.setBandsId(obj.getBandsId());
         songs.setUploaded(obj.getUploaded());
+        songs.setFileName(obj.getFileName());
         return songsRepository.save(songs);
     }
 

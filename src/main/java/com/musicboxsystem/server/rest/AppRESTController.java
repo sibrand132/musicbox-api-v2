@@ -577,7 +577,14 @@ public class AppRESTController {
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteSongs/{id}")
     public @ResponseBody void deleteSongs( @PathVariable String id){
+        Songs song = songsService.findById(id);
+        String dataDirectory = "uploads/songs/"+song.getBandsId();
+        if(song.getUploaded().equals("true")){
+            File file = new File(dataDirectory+"/"+song.getFileName());
+            file.delete();
+        }
         songsService.delete(id);
+
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = "/updateSongs/{id}")
@@ -772,16 +779,16 @@ public class AppRESTController {
     }
 
 
-    @RequestMapping(value="/uploadSongs/{albumsId}", method=RequestMethod.POST)
-    public @ResponseBody String uploadSongs(@RequestParam("file") MultipartFile file, @PathVariable String albumsId){
+    @RequestMapping(value="/uploadSongs/{bandsId}", method=RequestMethod.POST)
+    public @ResponseBody String uploadSongs(@RequestParam("file") MultipartFile file, @PathVariable String bandsId){
         String name = file.getOriginalFilename();
         if (!file.isEmpty()) {
             try {
-                File dir = new File("uploads/songs/"+albumsId);
+                File dir = new File("uploads/songs/"+bandsId);
                 dir.mkdir();
                 byte[] bytes = file.getBytes();
                 BufferedOutputStream stream =
-                        new BufferedOutputStream(new FileOutputStream(new File("uploads/songs/"+ albumsId + "/" + name )));
+                        new BufferedOutputStream(new FileOutputStream(new File("uploads/songs/"+ bandsId + "/" + name )));
                 stream.write(bytes);
                 stream.close();
                 return "You successfully uploaded " + name + " into " + name + "-uploaded !";
@@ -794,10 +801,10 @@ public class AppRESTController {
     }
 
 
-    @RequestMapping("/downloadSongs/{albumsId}/{fileName:.+}")
-    public void downloadSongs( HttpServletRequest request, HttpServletResponse response, @PathVariable String albumsId, @PathVariable("fileName") String fileName)
+    @RequestMapping("/downloadSongs/{bandsId}/{fileName:.+}")
+    public void downloadSongs( HttpServletRequest request, HttpServletResponse response, @PathVariable String bandsId, @PathVariable("fileName") String fileName)
     {
-        String dataDirectory = "uploads/songs/"+albumsId;
+        String dataDirectory = "uploads/songs/"+bandsId;
         Path file = Paths.get(dataDirectory, fileName);
         response.setContentType("application/force-download");
         response.addHeader("Content-Disposition", "attachment; filename="+fileName);
@@ -810,6 +817,7 @@ public class AppRESTController {
             ex.printStackTrace();
         }
     }
+
 
 
     private static final int BUFFER_SIZE = 4096;
