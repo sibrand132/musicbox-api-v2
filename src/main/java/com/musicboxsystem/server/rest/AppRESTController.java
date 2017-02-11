@@ -142,7 +142,10 @@ public class AppRESTController {
         else
         {
 
-            bandsService.create(bandsEntity);
+            Bands band = bandsService.create(bandsEntity);
+            Users userTmp = usersService.findByEmail(band.getLeader());
+            Members members = new Members(band.getId(),userTmp.getId());
+            membersService.create(members);
 
             response.put("message", "Success");
         }
@@ -154,8 +157,30 @@ public class AppRESTController {
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteBands/{id}")
     public @ResponseBody void deleteBands( @PathVariable String id){
+        List <Tracks> tracks = tracksService.findByBandsId(id);
+        for (Tracks track: tracks){
+            String dataDirectoryTrack = "uploads/tracks/"+track.getBandsId();
+            if(track.getUploaded().equals("true")){
+                File file = new File(dataDirectoryTrack+"/"+track.getFileName());
+                file.delete();
+            }
+        }
+
+        List<Songs> songs = songsService.findByBandsId(id);
+        for(Songs song: songs)
+        {
+            String dataDirectorySong = "uploads/song/"+song.getBandsId();
+            if(song.getUploaded().equals("true")){
+                File file = new File(dataDirectorySong+"/"+song.getFileName());
+                file.delete();
+            }
+        }
+
         bandsService.delete(id);
         albumsService.deleteAll(id);
+        songsService.deleteAll(id);
+        tracksService.deleteAll(id);
+        membersService.deleteAllFromBand(id);
 
     }
 
@@ -290,22 +315,6 @@ public class AppRESTController {
 
 
         Users usersEntity = usersService.findByEmail(loginEntity.getEmail());
-        Claims customClaims = Jwts.claims();
-        customClaims.put("email", usersEntity.getEmail());
-        customClaims.put("role", usersEntity.getRole());
-        customClaims.put("name", usersEntity.getName());
-        customClaims.put("id", usersEntity.getId());
-
-        if(!usersService.bandIdIfLeader(loginEntity.getEmail()).equals("")){
-            customClaims.put("bandIdLeader", usersService.bandIdIfLeader(loginEntity.getEmail()));
-        }
-
-
-        String compactJws = Jwts.builder()
-                .setClaims(customClaims)
-                .signWith(SignatureAlgorithm.HS512, this.getSalt())
-                .compact();
-
 
 
 
@@ -316,6 +325,20 @@ public class AppRESTController {
             response.put("pass", "Invalid email and/or password");
         }
         else {
+            Claims customClaims = Jwts.claims();
+            customClaims.put("email", usersEntity.getEmail());
+            customClaims.put("role", usersEntity.getRole());
+            customClaims.put("name", usersEntity.getName());
+            customClaims.put("id", usersEntity.getId());
+            if(!usersService.bandIdIfLeader(loginEntity.getEmail()).equals("")){
+                customClaims.put("bandIdLeader", usersService.bandIdIfLeader(loginEntity.getEmail()));
+            }
+
+
+            String compactJws = Jwts.builder()
+                    .setClaims(customClaims)
+                    .signWith(SignatureAlgorithm.HS512, this.getSalt())
+                    .compact();
 
             response.put("message", "Success");
             response.put("token", compactJws);
@@ -527,6 +550,12 @@ public class AppRESTController {
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteTracks/{id}")
     public @ResponseBody void deleteTracks( @PathVariable String id){
+        Tracks track = tracksService.findById(id);
+        String dataDirectory = "uploads/tracks/"+track.getBandsId();
+        if(track.getUploaded().equals("true")){
+            File file = new File(dataDirectory+"/"+track.getFileName());
+            file.delete();
+        }
         tracksService.delete(id);
     }
 
@@ -661,7 +690,6 @@ public class AppRESTController {
             return "You failed to upload " + name + " because the file was empty.";
         }
     }
-
 
 
 

@@ -78,6 +78,13 @@ public class TracksService implements ServiceInterface<Tracks>, CustomInterfaceT
     tracksRepository.delete(obj);
     }
 
+    public void deleteAll(String id){
+        List<Tracks> tracksList = tracksRepository.findByBandsId(id);
+        for(Tracks album : tracksList){
+            tracksRepository.delete(album);
+        }
+    }
+    
     @Override
     public List<Tracks> findByBandsId(String id) {
         List<Tracks> tracksList = tracksRepository.findByBandsId(id);

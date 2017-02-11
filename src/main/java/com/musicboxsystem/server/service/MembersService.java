@@ -97,4 +97,11 @@ public class MembersService implements ServiceInterface <Members>, CustomInterfa
         List<Members> membersList = membersRepository.findByUsersId(id);
         return  convertToDTOs(membersList);
     }
+
+    public void deleteAllFromBand(String id){
+        List<Members> membersList = membersRepository.findByBandsId(id);
+        for(Members album : membersList) {
+            membersRepository.delete(album);
+        }
+    }
 }

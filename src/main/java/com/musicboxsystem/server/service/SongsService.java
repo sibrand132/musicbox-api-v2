@@ -76,6 +76,12 @@ public class SongsService implements ServiceInterface<Songs>, CustomInterfaceSon
         songsRepository.delete(obj);
     }
 
+    public void deleteAll(String id){
+        List<Songs> songsList = songsRepository.findByBandsId(id);
+        for (Songs song : songsList){
+            songsRepository.delete(song);
+        }
+    }
     @Override
     public List<Songs> findByBandsId(String id) {
         List<Songs> songsList = songsRepository.findByBandsId(id);

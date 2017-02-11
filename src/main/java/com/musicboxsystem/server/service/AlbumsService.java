@@ -2,7 +2,9 @@ package com.musicboxsystem.server.service;
 
 import com.musicboxsystem.server.domain.Albums;
 import com.musicboxsystem.server.domain.Bands;
+import com.musicboxsystem.server.domain.Songs;
 import com.musicboxsystem.server.repository.AlbumsRepository;
+import com.musicboxsystem.server.repository.SongsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import static java.util.stream.Collectors.toList;
@@ -16,10 +18,12 @@ import java.util.List;
 public class AlbumsService implements ServiceInterface <Albums>, CustomInterfaceAlbums{
 
     public AlbumsRepository albumsRepository;
+    public SongsRepository songsRepository;
 
     @Autowired
-    public AlbumsService(AlbumsRepository albumsRepository) {
+    public AlbumsService(AlbumsRepository albumsRepository, SongsRepository songsRepository) {
         this.albumsRepository = albumsRepository;
+        this.songsRepository = songsRepository;
     }
 
     @Override
@@ -67,6 +71,11 @@ public class AlbumsService implements ServiceInterface <Albums>, CustomInterface
 
     @Override
     public void delete(String obj) {
+        List<Songs> songsList = songsRepository.findByAlbumsId(obj);
+        for (Songs song: songsList){
+            song.setAlbumsId("");
+            songsRepository.save(song);
+        }
         albumsRepository.delete(obj);
     }
 
