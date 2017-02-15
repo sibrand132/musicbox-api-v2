@@ -867,6 +867,12 @@ public class AppRESTController {
             }
     }
 
+    @RequestMapping("/runAudacity")
+    public void runAudacity() throws IOException {
+        Process process = new ProcessBuilder("Audacity/audacity.exe").start();
+    }
+
+
 
 
     public boolean checkError(String type, BindingResult bindingResult){

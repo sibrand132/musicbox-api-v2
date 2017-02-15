@@ -90,7 +90,8 @@ public class SongsService implements ServiceInterface<Songs>, CustomInterfaceSon
 
     @Override
     public List<Songs> findByAlbumsId(String id) {
-        return null;
+        List<Songs> songsList = songsRepository.findByAlbumsId(id);
+        return  convertToDTOs(songsList);
     }
 
 
